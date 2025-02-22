@@ -12,6 +12,7 @@ class API extends REST
     public $data = "";
     public $current_call;
     private $db = null;
+    private $auth = null;
 
     public function __construct()
     {
@@ -78,6 +79,46 @@ class API extends REST
         $data = $this->json($_SERVER);
     }
 
+    public function die($e){
+        $data = [
+            "error" => $e->getMessage(),
+        ];
+        $response_code = 400;
+        if($e->getMessage() == "Expired token" || $e->getMessage() == "Unauthorized"){
+            $response_code = 403;
+        }
+        if($e->getMessage() == "Not found"){
+            $response_code = 404;
+        }
+        $data = $this->json($data);
+        $this->response($data, $response_code);
+    }
+    
+    public function auth(){
+        $headers = getallheaders();
+        if(isset($headers['Authorization'])){
+            $token = explode(' ', $headers['Authorization']);
+            $this->auth = new Auth($token[1]);
+        }
+        
+    }
+
+    public function isAuthenticated(){
+        if($this->auth == null){
+            return false;
+        }
+        if($this->auth->getOAuth()->authenticate() and isset($_SESSION['username'])){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    public function getUserName(){
+        return $_SESSION['username'];
+    }
+
     public function generate_hash()
     {
         $bytes = random_bytes(16);
@@ -115,4 +156,9 @@ class API extends REST
 // Initiiate Library
 
 $api = new API();
-$api->processApi();
+try{
+    $api->auth();
+    $api->processApi();
+}catch(Exception $e){
+    $api->die($e);
+}

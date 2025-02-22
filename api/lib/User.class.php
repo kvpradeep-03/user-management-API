@@ -4,8 +4,9 @@ require $_SERVER['DOCUMENT_ROOT']."/vendor/autoload.php";
 class User{
     private $db;
     private $user;
-
+    private $username;
     public function __construct($username){
+        $this->username = $username;
         $this->db = Database::getConnection();
         $query = "SELECT * FROM `auth` WHERE `username` = '$username';";
         $result = mysqli_query($this->db, $query);
