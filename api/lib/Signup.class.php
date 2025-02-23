@@ -57,8 +57,14 @@ class Signup
             return false;
         }
     }
+
+    /**
+     * sends Verification Mail to the user with a link to verify the account.
+     * uses Brevo API to send the mail.
+     */
     public function sendVerificationMail()
-    {
+    {   
+        // Load the configuration file from the root directory
         $config_json = file_get_contents('../../env.json');
         $config = json_decode($config_json, true);
 
@@ -93,6 +99,10 @@ class Signup
         return password_hash($this->password, PASSWORD_BCRYPT);
     }
 
+    /**
+     * verifies the account using the token.
+     * token set to mail which is created during signup. with help of this token we can verify the account.
+     */
     public static function verifyAccount($token)
     {
         $query = "SELECT * FROM auth WHERE token='$token';";

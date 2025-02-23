@@ -34,5 +34,30 @@ class User{
     public function isActive(){
         return $this->user['active'];
     }
+    
+    // Get a specific user account by id
+    public static function getUserAccount($id){
+        $db = Database::getConnection();
+        $query = "SELECT * FROM `auth` WHERE `id` = $id";
+        $result = mysqli_query($db, $query);
+        if($result){
+            $data = mysqli_fetch_assoc($result);
+            return $data;
+        }
+    }
+
+    // Get all user accounts
+    public static function getAllaccounts(){
+        $db = Database::getConnection();
+        $query = "SELECT * FROM `auth`";
+        $result = mysqli_query($db, $query);
+        if($result){
+            $users = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            return $users;
+        }else{
+            return [];  // Return an empty array if no result
+        }
+        
+    }
 
 }

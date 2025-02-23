@@ -4,7 +4,8 @@ require_once($_SERVER['DOCUMENT_ROOT'].'/api/lib/Auth.class.php');
 require_once($_SERVER['DOCUMENT_ROOT'].'/api/lib/User.class.php');
 require_once($_SERVER['DOCUMENT_ROOT'].'/api/lib/Database.class.php');
 
-class OAuth{
+class OAuth
+{
     private $db;
     private $access_token;
     private $refresh_token;
@@ -13,31 +14,35 @@ class OAuth{
     private $username;
 
 
-    public function __construct($token = null){
+    public function __construct($token = null)
+    {
         $this->db = Database::getConnection();
-        if($token != null){
-            if(str_starts_with($token, 'a.')){
+        if($token != null) {
+            if(str_starts_with($token, 'a.')) {
                 $this->access_token = $token;
-            }else if(str_starts_with($token, 'r.')){
+            } elseif(str_starts_with($token, 'r.')) {
                 $this->refresh_token = $token;
-            }else{
+            } else {
                 $this->setUsername($token);
             }
         }
     }
 
-    public function setUsername($username){
+    public function setUsername($username)
+    {
         $this->username = $username;
         $this->user = new User($this->username);
     }
 
-    public function getUsername(){
+    public function getUsername()
+    {
         return $this->username;
     }
 
+    // Checks if the access token is valid.
     public function authenticate()
     {
-        if($this->access_token != NULL) {
+        if($this->access_token != null) {
             $query = "SELECT * FROM `session` WHERE `access_token` = '$this->access_token'";
             $result = mysqli_query($this->db, $query);
             if($result) {
@@ -51,45 +56,56 @@ class OAuth{
                     $this->username = $_SESSION['username'] = $data['username'];
                     $_SESSION['token'] = $this->access_token;
                     return true;
-                }else {
+                } else {
                     throw new Exception("Expired token");
                 }
-            }else {
+            } else {
                 throw new Exception("Error: ". mysqli_error($this->db));
-            } 
+            }
         }
     }
 
-    public function newSession($valid_for = 7200, $reference_token = 'auth_grant'){
-        if($this->username == null){
+    /**
+     * Creates a new session for the user.
+     * can be used to create a new session (in default auth_grant) or refresh an existing session.
+     */
+    public function newSession($valid_for = 7200, $reference_token = 'auth_grant')
+    {
+        if($this->username == null) {
             throw new exception("Username not set for OAuth.");
         }
         $this->valid_for = $valid_for;
         $this->access_token = 'a.'.Auth::generateRandomHash(32);
-        if($reference_token == 'auth_grant'){
+        if($reference_token == 'auth_grant') {
             $this->refresh_token = 'r.'.Auth::generateRandomHash(32);
-        }else{
+        } else {
             $this->refresh_token = "d.".Auth::generateRandomHash(16);
         }
 
         $query = "INSERT INTO `session` (`username`, `access_token`, `refresh_token`, `valid_for`, `reference_token`)
                   VALUES ('$this->username', '$this->access_token', '$this->refresh_token', $this->valid_for, '$reference_token');";
 
-        if(mysqli_query($this->db, $query)){
+        if(mysqli_query($this->db, $query)) {
             return array(
                 "access_token" => $this->access_token,
                 "refresh_token" => $this->refresh_token,
                 "valid_for" => $this->valid_for,
                 "reference_token" => $reference_token
             );
-        }else{
+        } else {
             throw new Exception("Unable to create session.");
         }
     }
 
+    /**
+     * Refreshes the access token after its expiry by the refresh token.
+     * Both the access token and refresh token are updated.
+     * Again the after refresh token it receives a dummy token (as a refresh token) which cannot be used to refresh the access.
+     * In that situation make the user login via password authentication.
+     */
     public function refreshAccess()
     {
-        if($this->refresh_token != NULL and !str_starts_with($this->refresh_token, 'd.')) {
+        if($this->refresh_token != null and !str_starts_with($this->refresh_token, 'd.')) {
             $query = "SELECT * FROM `session` WHERE `refresh_token` = '$this->refresh_token'";
             $result = mysqli_query($this->db, $query);
             if($result) {
@@ -110,7 +126,4 @@ class OAuth{
         }
     }
 
-
 }
-
-?>

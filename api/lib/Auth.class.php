@@ -32,7 +32,7 @@ class Auth
 
         if($this->isTokenAuth) {
             $this->oauth = new OAuth($this->token);
-            $this->oauth->authenticate();
+            $this->oauth->authenticate();   //throws exception if token is invalid
         } else {
             $user = new User($this->username);
             $hash = $user->getPasswordHash();
@@ -40,7 +40,7 @@ class Auth
                 if(!$user->isActive()) {
                     throw new Exception("Check your mail and verify your account.");
                 } else {
-                    $this->loginTokens = $this->addSession(7200);
+                    $this->loginTokens = $this->addSession(7200);   // Gets the access and refresh tokens
                 }
             } else {
                 throw new Exception("Password mismatch.");
@@ -48,24 +48,17 @@ class Auth
         }
     }
 
+    // Return the access and refresh tokens for the authenticated user.
     public function getAuthTokens(){
         return $this->loginTokens;
     }
     
-    /**
-     * returns the username of authenticated user.
-     */
-    public function getUserName()
-    {
-        if($this->oauth->authenticate()) {
-            return $this->oauth->getUserName();
-        }
-    }
-
     public function getOAuth()
     {
         return $this->oauth;
     }
+
+    // Add a new session to the database with a valid time of 2 hours.
     public function addSession(){
         $oauth = new OAuth($this->username);
         $session = $oauth->newSession();
@@ -75,5 +68,23 @@ class Auth
     public static function generateRandomHash($len){
         $bytes = openssl_random_pseudo_bytes($len);
         return bin2hex($bytes);
+    }
+
+    // Logout the user only with access_token and username.
+    public static function logout($username)
+    {
+        $db = Database::getConnection();
+        if($username == $_SESSION['username']) {
+            $query = "DELETE FROM `session` WHERE `username` = '$username' ";
+            $result = mysqli_query($db, $query);
+            if ($result) {
+                return true;
+            } else {
+                throw new Exception("Accesstoken is required to logout");
+            }
+        } else {
+            throw new exception("Unauthorized");
+        }
+
     }
 }

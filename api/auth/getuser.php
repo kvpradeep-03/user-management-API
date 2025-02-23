@@ -2,15 +2,16 @@
 
 ${basename(__FILE__, '.php')} = function(){
     if($this->isAuthenticated()){
-        if($this->get_request_method() == "POST"){
+        if($this->get_request_method() == "POST" and isset($this->_request['id'])){
+            $id = $this->_request['id'];
             try{
-                $users = User::getAllaccounts();
-                if(empty($users)){
-                    throw new Exception("No users found");
-                }
-
+                $user = User::getUserAccount($id);
                 $data = [
-                    "users" => $users // Return all users in an array
+                    "id" => $user['id'],
+                    "username" => $user['username'],
+                    "email" => $user['email'],
+                    "active" => $user['active'],
+                
                 ];
                 $data = $this->json($data);
                 $this->response($data, 200);
