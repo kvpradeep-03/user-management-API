@@ -49,23 +49,26 @@ class Auth
     }
 
     // Return the access and refresh tokens for the authenticated user.
-    public function getAuthTokens(){
+    public function getAuthTokens()
+    {
         return $this->loginTokens;
     }
-    
+
     public function getOAuth()
     {
         return $this->oauth;
     }
 
     // Add a new session to the database with a valid time of 2 hours.
-    public function addSession(){
+    public function addSession()
+    {
         $oauth = new OAuth($this->username);
         $session = $oauth->newSession();
         return $session;
     }
 
-    public static function generateRandomHash($len){
+    public static function generateRandomHash($len)
+    {
         $bytes = openssl_random_pseudo_bytes($len);
         return bin2hex($bytes);
     }
@@ -87,4 +90,26 @@ class Auth
         }
 
     }
+
+    public static function delete($id)
+    {
+        $db = Database::getConnection();
+        if ($db) {
+            $query = "DELETE FROM `auth` WHERE `id` = $id and `username` = '".$_SESSION['username']."'";
+            $result = mysqli_query($db, $query);
+
+            if ($result) {
+                if (mysqli_affected_rows($db) > 0) {
+                    return true; // Successfully deleted
+                } else {
+                    throw new Exception("Unauthorized");
+                }
+            } else {
+                throw new Exception("error: ".mysqli_error($db));
+            }
+        }
+    }
+
+
+
 }

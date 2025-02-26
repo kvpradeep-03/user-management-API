@@ -60,4 +60,18 @@ class User{
         
     }
 
+    //todo: finish this endpoint
+    public static function updateUser($id, $new_username, $new_email, $new_password){
+        $db = Database::getConnection();
+        $query = "UPDATE `auth` SET `username` = '$new_username', `password` = '$new_password', `email` = '$new_email' WHERE `id` = $id";
+        $result = mysqli_query($db, $query);
+        if($result){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
+
 }
