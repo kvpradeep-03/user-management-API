@@ -91,6 +91,10 @@ class Auth
 
     }
 
+    /**
+     * delete a user account, only the user can delete their own account
+     * if user updates his account
+     */
     public static function delete($id)
     {
         $db = Database::getConnection();
