@@ -1,13 +1,12 @@
-
 <?php
 
-${basename(__FILE__, '.php')} = function(){
-    if($this->get_request_method() == "POST" and isset($this->_request['username']) and isset($this->_request['email']) and isset($this->_request['password'])){
+${basename(__FILE__, '.php')} = function () {
+    if($this->get_request_method() == "POST" and isset($this->_request['username']) and isset($this->_request['email']) and isset($this->_request['password'])) {
         $username = $this->_request['username'];
         $email = $this->_request['email'];
         $password = $this->_request['password'];
 
-        try{
+        try {
             $s = new Signup($username, $password, $email);
             $data = [
                 "message" => "Signup success",
@@ -20,7 +19,7 @@ ${basename(__FILE__, '.php')} = function(){
             ];
             $this->response($this->json($data), 409);
         }
-         
+
     } else {
         $data = [
             "error" => "Bad request",
@@ -29,6 +28,3 @@ ${basename(__FILE__, '.php')} = function(){
         $this->response($data, 400);
     }
 };
-
-
-

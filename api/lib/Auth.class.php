@@ -93,7 +93,7 @@ class Auth
 
     /**
      * delete a user account, only the user can delete their own account
-     * if user updates his account
+     * if user updates his account, has to login again to delete the account
      */
     public static function delete($id)
     {
